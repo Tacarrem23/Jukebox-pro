@@ -47,3 +47,25 @@ export async function getTrackById(id) {
   } = await db.query(sql, [id]);
   return track;
 }
+
+
+// routes/tracks.js
+const express = require('express');
+const db = require('../db');
+const authenticate = require('../middleware/auth');
+const router = express.Router();
+
+router.use(authenticate);
+
+router.get('/:id/playlists', async (req, res) => {
+  const trackId = req.params.id;
+  const playlists = await db.query(`
+    SELECT p.* FROM playlists p
+    JOIN playlists_tracks pt ON pt.playlist_id = p.id
+    WHERE pt.track_id = $1 AND p.user_id = $2
+  `, [trackId, req.user.id]);
+
+  res.json(playlists.rows);
+});
+
+module.exports = router;
